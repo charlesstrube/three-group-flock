@@ -16,6 +16,7 @@
     "@types/dat.gui": "^0.7.13",
     "@types/three": "^0.184.0",
     "dat.gui": "^0.7.9",
+    "sparse-octree": "^7.1.8",
     "stats.js": "^0.17.0",
     "three": "^0.184.0"
   }

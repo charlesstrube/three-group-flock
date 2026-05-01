@@ -1,41 +1,39 @@
 import { Vector3 } from "three";
 import { params } from "./gui";
 import { Particle } from "./particle";
+import type { PointOctree } from "sparse-octree";
 
 export class Predator extends Particle {
   type = "predator" as const;
   color: string = "#f00";
 
-  cohesion(particles: Particle[]) {
-    const { steering, count } = this.getSteering(
+  // Predators chase all nearby entities (birds + other predators).
+  cohesion(particles: PointOctree<Particle>) {
+    const { steering: point, count } = this.getSteering(
       particles,
       0.5,
-      (particle) => particle.position,
+      (particle) => particle.data!.position,
     );
     if (count > 0) {
-      steering.divideScalar(count);
-      steering.sub(this.position);
-      steering.setLength(params.maxSpeed);
-      steering.sub(this.velocity);
-      steering.clampLength(0, params.maxForce);
+      point.divideScalar(count);
+      point.sub(this.position);
+      point.setLength(params.maxSpeed);
+      point.sub(this.velocity);
+      point.clampLength(0, params.maxForce);
     }
-    return steering;
+    return point;
   }
 
-  separation(particles: Particle[]) {
-    const { steering, count } = this.getSteering(
-      particles,
-      0.2,
-      (particle, distance) => {
-        if (particle.type === "predator") {
-          const diff = this.position.clone().sub(particle.position);
-          diff.divideScalar(distance);
-          // diff.multiplyScalar(4);
-          return diff;
-        }
-        return new Vector3();
-      },
-    );
+  // Predators only avoid other predators, not birds.
+  separation(particles: PointOctree<Particle>) {
+    const { steering, count } = this.getSteering(particles, 0.2, (point) => {
+      if (point.data!.type === "predator") {
+        const diff = this.position.clone().sub(point.data!.position);
+        diff.divideScalar(point.distance);
+        return diff;
+      }
+      return new Vector3();
+    });
     if (count > 0) {
       steering.divideScalar(count);
       steering.setLength(params.maxSpeed);
@@ -45,7 +43,8 @@ export class Predator extends Particle {
     return steering;
   }
 
-  flock(particles: Particle[]) {
+  // No alignment: predators don't try to match velocity with their neighbors.
+  flock(particles: PointOctree<Particle>) {
     this.acceleration.add(this.cohesion(particles));
     this.acceleration.add(this.separation(particles));
   }

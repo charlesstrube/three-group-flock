@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { params } from "./gui";
+import { EDGES, params } from "./gui";
+import type { PointContainer, PointOctree } from "sparse-octree";
 
 function createRandomVector(magnitude = 0.01): THREE.Vector3 {
   return new THREE.Vector3(
@@ -17,16 +18,15 @@ export class Particle {
   type: "bird" | "predator" | "none" = "none";
 
   setEdge(axis: "x" | "y" | "z") {
-    const max = 2;
-    const min = 0 - max;
+    const min = 0 - EDGES.width;
     const position = this.position[axis];
     const setter = `set${axis.toUpperCase()}` as "setX" | "setY" | "setZ";
 
-    if (position > max) {
+    if (position > EDGES.width) {
       this.position[setter](min);
     }
     if (position < min) {
-      this.position[setter](max);
+      this.position[setter](EDGES.width);
     }
   }
 
@@ -37,17 +37,21 @@ export class Particle {
   }
 
   getSteering(
-    particles: Particle[],
+    points: PointOctree<Particle>,
     perceptionRadius: number,
-    vectorToAddCb: (particle: Particle, distance: number) => THREE.Vector3,
+    vectorToAddCb: (point: PointContainer<Particle>) => THREE.Vector3,
   ) {
     const steering = new THREE.Vector3();
     let count = 0;
-    for (let particle of particles) {
-      const distance = this.position.distanceTo(particle.position);
-      if (particle !== this && distance < perceptionRadius) {
+
+    // findPoints returns only neighbors within the radius — O(log n) instead of O(n).
+    // skipSelf=true excludes this particle's own position from the results.
+    const validPoints = points.findPoints(this.position, perceptionRadius, true);
+
+    for (let particle of validPoints) {
+      if (particle.data) {
         count += 1;
-        steering.add(vectorToAddCb(particle, distance));
+        steering.add(vectorToAddCb(particle));
       }
     }
 
@@ -55,7 +59,7 @@ export class Particle {
   }
 
   // @ts-ignore
-  flock(particles: Particle[]) {}
+  flock(particles: PointOctree<Particle>) {}
 
   update() {
     this.position.add(this.velocity);

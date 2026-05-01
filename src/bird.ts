@@ -1,14 +1,16 @@
+import type { PointOctree } from "sparse-octree";
 import { params } from "./gui";
 import { Particle } from "./particle";
 
 export class Bird extends Particle {
   type = "bird" as const;
 
-  cohesion(particles: Particle[]) {
+  // Steer toward the average position of nearby birds.
+  cohesion(octotree: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
-      particles,
+      octotree,
       params.radius.cohesion,
-      (particle) => particle.position,
+      (point) => point.data!.position,
     );
     if (count > 0) {
       steering.divideScalar(count);
@@ -20,15 +22,17 @@ export class Bird extends Particle {
     return steering;
   }
 
-  separation(particles: Particle[]) {
+  // Steer away from nearby particles. Dividing by distance makes the force
+  // stronger for closer neighbors. Predators trigger 3x the repulsion force.
+  separation(octotree: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
-      particles,
+      octotree,
       params.radius.separation,
-      (particle, distance) => {
-        const diff = this.position.clone().sub(particle.position);
-        diff.divideScalar(distance);
+      (point) => {
+        const diff = this.position.clone().sub(point.data!.position);
+        diff.divideScalar(point.distance);
 
-        if (particle.type === "predator") {
+        if (point.data!.type === "predator") {
           diff.multiplyScalar(3);
         }
         return diff;
@@ -43,11 +47,12 @@ export class Bird extends Particle {
     return steering;
   }
 
-  align(particles: Particle[]) {
+  // Steer toward the average velocity of nearby birds.
+  align(point: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
-      particles,
+      point,
       params.radius.alignment,
-      (particle) => particle.velocity,
+      (particle) => particle.data!.velocity,
     );
     if (count > 0) {
       steering.divideScalar(count);
@@ -58,7 +63,7 @@ export class Bird extends Particle {
     return steering;
   }
 
-  flock(particles: Particle[]) {
+  flock(particles: PointOctree<Particle>) {
     this.acceleration.add(this.cohesion(particles));
     this.acceleration.add(this.align(particles));
     this.acceleration.add(this.separation(particles));

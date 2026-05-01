@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import { Particle } from "./particle";
+import type { Particle } from "./particle";
 import { Bird } from "./bird";
 import { Predator } from "./predator";
+import type { PointOctree } from "sparse-octree";
 
 export function createGeometry(points: Particle[]) {
   const vertices: number[] = [];
@@ -9,7 +10,6 @@ export function createGeometry(points: Particle[]) {
 
   for (const point of points) {
     const [r, g, b] = point.color.replace("#", "").split("");
-    console.log(r, g, b);
     colors.push(
       Number.parseInt(r, 16),
       Number.parseInt(g, 16),
@@ -27,22 +27,23 @@ export function createGeometry(points: Particle[]) {
   return geometry;
 }
 
+// The octree must already be populated before this is called (see main.ts).
 export function updateGeometry(
   geometry: THREE.BufferGeometry,
   particles: Particle[],
+  octree: PointOctree<Particle>,
 ) {
   for (let i = 0; i < particles.length; i++) {
     const particle = particles[i];
-    particle.edges();
-    particle.flock(particles);
-    particle.update();
+    particle.edges();        // wrap around world boundaries
+    particle.flock(octree);  // compute steering forces via octree neighbor queries
+    particle.update();       // apply forces to velocity and position
 
+    // Write updated position directly into the GPU buffer.
     const x = i * 3;
-    const y = i * 3 + 1;
-    const z = i * 3 + 2;
     geometry.attributes.position.array[x] = particle.position.x;
-    geometry.attributes.position.array[y] = particle.position.y;
-    geometry.attributes.position.array[z] = particle.position.z;
+    geometry.attributes.position.array[x + 1] = particle.position.y;
+    geometry.attributes.position.array[x + 2] = particle.position.z;
   }
   geometry.attributes.position.needsUpdate = true;
 }
