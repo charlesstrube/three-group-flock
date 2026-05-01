@@ -30,12 +30,22 @@ export class Particle {
     }
   }
 
+  /**
+   * this limit the area to have boundaries
+   */
   edges() {
     this.setEdge("x");
     this.setEdge("y");
     this.setEdge("z");
   }
 
+  /**
+   *
+   * @param points
+   * @param perceptionRadius
+   * @param vectorToAddCb
+   * @returns { }
+   */
   getSteering(
     points: PointOctree<Particle>,
     perceptionRadius: number,
@@ -46,12 +56,16 @@ export class Particle {
 
     // findPoints returns only neighbors within the radius — O(log n) instead of O(n).
     // skipSelf=true excludes this particle's own position from the results.
-    const validPoints = points.findPoints(this.position, perceptionRadius, true);
+    const pointContainers = points.findPoints(
+      this.position,
+      perceptionRadius,
+      true,
+    );
 
-    for (let particle of validPoints) {
-      if (particle.data) {
+    for (let point of pointContainers) {
+      if (point.data) {
         count += 1;
-        steering.add(vectorToAddCb(particle));
+        steering.add(vectorToAddCb(point));
       }
     }
 
@@ -64,7 +78,8 @@ export class Particle {
   update() {
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
-    this.velocity.clampLength(0, params.maxSpeed);
+    if (this.type !== "none")
+      this.velocity.clampLength(0, params[this.type].maxSpeed);
     this.acceleration.multiplyScalar(0);
   }
 

@@ -6,32 +6,39 @@ export class Bird extends Particle {
   type = "bird" as const;
 
   // Steer toward the average position of nearby birds.
-  cohesion(octotree: PointOctree<Particle>) {
+  cohesion(octree: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
-      octotree,
-      params.radius.cohesion,
+      octree,
+      params.bird.radius.cohesion,
       (point) => point.data!.position,
     );
     if (count > 0) {
+      // average
       steering.divideScalar(count);
+      // go toward position
       steering.sub(this.position);
-      steering.setLength(params.maxSpeed);
+      // magnitude
+      steering.setLength(params.bird.maxSpeed);
+      // remove velocity
       steering.sub(this.velocity);
-      steering.clampLength(0, params.maxForce);
+      // limit
+      steering.clampLength(0, params.bird.maxForce);
     }
     return steering;
   }
 
   // Steer away from nearby particles. Dividing by distance makes the force
   // stronger for closer neighbors. Predators trigger 3x the repulsion force.
-  separation(octotree: PointOctree<Particle>) {
+  separation(octree: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
-      octotree,
-      params.radius.separation,
+      octree,
+      params.bird.radius.separation,
       (point) => {
+        // gets the opposite direction
         const diff = this.position.clone().sub(point.data!.position);
         diff.divideScalar(point.distance);
 
+        // makes them super afraid of predator
         if (point.data!.type === "predator") {
           diff.multiplyScalar(3);
         }
@@ -39,10 +46,14 @@ export class Bird extends Particle {
       },
     );
     if (count > 0) {
+      // average
       steering.divideScalar(count);
-      steering.setLength(params.maxSpeed);
+      // magnitude
+      steering.setLength(params.bird.maxSpeed);
+      // remove velocity
       steering.sub(this.velocity);
-      steering.clampLength(0, params.maxForce);
+      // limit
+      steering.clampLength(0, params.bird.maxForce);
     }
     return steering;
   }
@@ -51,14 +62,18 @@ export class Bird extends Particle {
   align(point: PointOctree<Particle>) {
     const { steering, count } = this.getSteering(
       point,
-      params.radius.alignment,
+      params.bird.radius.alignment,
       (particle) => particle.data!.velocity,
     );
     if (count > 0) {
+      // average
       steering.divideScalar(count);
-      steering.setLength(params.maxSpeed);
+      // magnitude
+      steering.setLength(params.bird.maxSpeed);
+      // remove velocity
       steering.sub(this.velocity);
-      steering.clampLength(0, params.maxForce);
+      // limite
+      steering.clampLength(0, params.bird.maxForce);
     }
     return steering;
   }

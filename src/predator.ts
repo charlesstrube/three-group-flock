@@ -11,34 +11,48 @@ export class Predator extends Particle {
   cohesion(particles: PointOctree<Particle>) {
     const { steering: point, count } = this.getSteering(
       particles,
-      0.5,
+      params.predator.radius.cohesion,
       (particle) => particle.data!.position,
     );
     if (count > 0) {
+      // average
       point.divideScalar(count);
+      // goes toward position
       point.sub(this.position);
-      point.setLength(params.maxSpeed);
+      // magnitude
+      point.setLength(params.predator.maxSpeed);
+      // remove evlocity
       point.sub(this.velocity);
-      point.clampLength(0, params.maxForce);
+      // limit
+      point.clampLength(0, params.predator.maxForce);
     }
     return point;
   }
 
   // Predators only avoid other predators, not birds.
   separation(particles: PointOctree<Particle>) {
-    const { steering, count } = this.getSteering(particles, 0.2, (point) => {
-      if (point.data!.type === "predator") {
-        const diff = this.position.clone().sub(point.data!.position);
-        diff.divideScalar(point.distance);
-        return diff;
-      }
-      return new Vector3();
-    });
+    const { steering, count } = this.getSteering(
+      particles,
+      params.predator.radius.separation,
+      (point) => {
+        // only goes away from other predators
+        if (point.data!.type === "predator") {
+          const diff = this.position.clone().sub(point.data!.position);
+          diff.divideScalar(point.distance);
+          return diff;
+        }
+        return new Vector3();
+      },
+    );
     if (count > 0) {
+      // average
       steering.divideScalar(count);
-      steering.setLength(params.maxSpeed);
+      // magnitude
+      steering.setLength(params.predator.maxSpeed);
+      // remove velocity
       steering.sub(this.velocity);
-      steering.clampLength(0, params.maxForce);
+      // limit
+      steering.clampLength(0, params.predator.maxForce);
     }
     return steering;
   }
