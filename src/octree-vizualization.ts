@@ -4,6 +4,7 @@ import {
   LineBasicMaterial,
   LineSegments,
   Vector3,
+  type TypedArray,
 } from "three";
 import type { PointOctree } from "sparse-octree";
 import type { Particle } from "./particle";
@@ -13,21 +14,21 @@ import { params } from "./gui";
 const FLOATS_PER_BOX = 72;
 const MAX_BOXES = 512;
 
-export function createOctreeViz(): LineSegments {
+export function createOctreeVizualization(): LineSegments {
   const geometry = new BufferGeometry();
   const buffer = new Float32Array(MAX_BOXES * FLOATS_PER_BOX);
   geometry.setAttribute("position", new Float32BufferAttribute(buffer, 3));
 
   const material = new LineBasicMaterial({ color: 0x00ff00 });
-  const viz = new LineSegments(geometry, material);
-  viz.visible = params.showOctree;
-  return viz;
+  const vizualization = new LineSegments(geometry, material);
+  vizualization.visible = params.showOctree;
+  return vizualization;
 }
 
 // Writes the 12 edges of a box into the buffer at `offset`.
 // Returns the next available offset.
 function writeBox(
-  buffer: Float32Array,
+  buffer: TypedArray,
   offset: number,
   min: Vector3,
   max: Vector3,
@@ -129,13 +130,13 @@ function writeBox(
   return offset;
 }
 
-export function updateOctreeViz(
-  viz: LineSegments,
+export function updateOctreeVizualization(
+  vizualization: LineSegments,
   octree: PointOctree<Particle>,
 ): void {
-  const attr = viz.geometry.getAttribute("position");
-  const buffer = attr.array as Float32Array;
-  viz.visible = params.showOctree;
+  const attr = vizualization.geometry.getAttribute("position");
+  const buffer = attr.array;
+  vizualization.visible = params.showOctree;
 
   let offset = 0;
 
@@ -152,7 +153,9 @@ export function updateOctreeViz(
       node.data.points.length > 0
     ) {
       offset = writeBox(buffer, offset, node.min, node.max);
-      if (offset >= MAX_BOXES * FLOATS_PER_BOX) break;
+      if (offset >= MAX_BOXES * FLOATS_PER_BOX) {
+        break;
+      }
     }
     result = iter.next();
   }

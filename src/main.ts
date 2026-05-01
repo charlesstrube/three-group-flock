@@ -13,7 +13,10 @@ import {
 import { stats } from "./gui";
 import { Points } from "three";
 import { createOctree, populateOctree } from "./octree";
-import { createOctreeViz, updateOctreeViz } from "./octree-viz";
+import {
+  createOctreeVizualization,
+  updateOctreeVizualization,
+} from "./octree-vizualization";
 
 const birdGeometry = createGeometry(birds);
 const predatorGeometry = createGeometry(predators);
@@ -24,8 +27,8 @@ const predatorPoints = new Points(predatorGeometry, predatorMaterial);
 scene.add(birdPoints);
 scene.add(predatorPoints);
 
-const octreeViz = createOctreeViz();
-scene.add(octreeViz);
+const octreeVizualization = createOctreeVizualization();
+scene.add(octreeVizualization);
 
 function animate() {
   stats.begin();
@@ -35,7 +38,7 @@ function animate() {
   const octree = createOctree();
   populateOctree(life, octree);
 
-  updateOctreeViz(octreeViz, octree);
+  updateOctreeVizualization(octreeVizualization, octree);
 
   // Birds and predators have separate geometries but both flock against all of `life`.
   updateGeometry(birdGeometry, life, octree);
