@@ -59,11 +59,8 @@ export class Bird extends Particle {
   }
 
   flock(particles: Particle[]) {
-    const alignment = this.align(particles);
-    const cohesion = this.cohesion(particles);
-    const separation = this.separation(particles);
-    this.acceleration.add(cohesion);
-    this.acceleration.add(alignment);
-    this.acceleration.add(separation);
+    this.acceleration.add(this.cohesion(particles));
+    this.acceleration.add(this.align(particles));
+    this.acceleration.add(this.separation(particles));
   }
 }
