@@ -19,6 +19,7 @@ export const params = {
       separation: 0.2,
     },
   },
+  showOctree: false,
 };
 
 export const EDGES = {
@@ -41,6 +42,8 @@ predatorGui.add(params.predator, "maxForce", 0, 0.01);
 predatorGui.add(params.predator, "maxSpeed", 0, 0.01);
 predatorGui.add(params.predator.radius, "cohesion", 0, 1);
 predatorGui.add(params.predator.radius, "separation", 0, 1);
+
+gui.add(params, "showOctree");
 
 export const stats = new Stats();
 stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom

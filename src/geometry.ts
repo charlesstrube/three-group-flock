@@ -35,9 +35,9 @@ export function updateGeometry(
 ) {
   for (let i = 0; i < particles.length; i++) {
     const particle = particles[i];
-    particle.edges();        // wrap around world boundaries
-    particle.flock(octree);  // compute steering forces via octree neighbor queries
-    particle.update();       // apply forces to velocity and position
+    particle.edges(); // wrap around world boundaries
+    particle.flock(octree); // compute steering forces via octree neighbor queries
+    particle.update(); // apply forces to velocity and position
 
     // Write updated position directly into the GPU buffer.
     const x = i * 3;
