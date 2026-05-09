@@ -3,7 +3,7 @@ import Stats from "stats.js";
 
 export const params = {
   bird: {
-    maxForce: 0.001,
+    maxForce: 0.0002,
     maxSpeed: 0.005,
     radius: {
       cohesion: 0.1 * 2,
@@ -12,7 +12,7 @@ export const params = {
     },
   },
   predator: {
-    maxForce: 0.001,
+    maxForce: 0.0002,
     maxSpeed: 0.005,
     radius: {
       cohesion: 0.5,
